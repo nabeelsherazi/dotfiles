@@ -1,17 +1,22 @@
 #!/bin/bash
 
+# Bootstrap new Linux install with everything I have to download anyway
+
+# Desired APT installs
 declare -alr packages_to_check=("curl" "gnupg2" "ca-certificates" "lsb-release" \
     "software-properties-common" "apt-transport-https" "wget" "build-essential" \
     "ninja-build" "cmake" "python3" "python3-pip" "cppcheck" "git")
+# Will be populated with any missing packages from above
 declare -a packages_to_install=()
 
-# Check for missing packages
+# --- Check for missing APT packages ---
+
+function is_pkg_installed {
+    [ "$(dpkg-query -W --showformat='${Status}\n' "$1" | grep "install ok installed")" == "install ok installed" ];
+}
 
 for pkg in "${packages_to_check[@]}"; do
-
-    is_pkg_installed="$(dpkg-query -W --showformat='${Status}\n' "${pkg}" | grep "install ok installed")"
-
-    if [ "${is_pkg_installed}" == "install ok installed" ]; then
+    if is_pkg_installed "$pkg"; then
         echo "OK: ${pkg} is installed."
     else
         echo "MISSING: ${pkg} is not installed, adding to install list"
@@ -19,15 +24,15 @@ for pkg in "${packages_to_check[@]}"; do
     fi
 done
 
-# Do install of missing packages
+# --- Do install of missing APT packages ---
 
 if [ ${#packages_to_install[@]} -eq 0 ]; then
-    echo "Nothing to install, yay!"
+    echo "NOTE: Nothing to install, yay!"
 else
     sudo apt install -y "${packages_to_install[@]}"
 fi
 
-# Install other stuff
+# --- Install other packages ---
 
 function cleanup {
   echo "Returning to original directory"
@@ -36,16 +41,35 @@ function cleanup {
 
 # Move to tmp and setup trap to go back
 cd /tmp || exit
-trap cleanup EXIT 
+trap cleanup EXIT
 
-# curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-# dpkg -i "./google-chome-stable_current_amd64.deb"
+# Chrome
+
+if is_pkg_installed "google-chrome-stable"; then
+    echo "OK: Chrome is installed"
+else
+    echo "MISSING: Google Chrome, installing now"
+    # curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    # dpkg -i "./google-chome-stable_current_amd64.deb"
+fi
+
+# Uninstall Firefox
+
+if is_pkg_installed "firefox"; then
+    echo "NOTE: Found Firefox installation, removing now"
+    sudo apt purge firefox
+else
+    echo "OK: Firefox not installed"
+fi
 
 # Install all LLVM tools
+
+echo "Installing LLVM tools"
 curl -s https://apt.llvm.org/llvm.sh | sudo bash /dev/stdin all
 
 # Register all LLVM tools
 # From: https://gist.github.com/junkdog/70231d6953592cd6f27def59fe19e50d
+
 function register_clang_version {
     local version=$1
     local priority=$2
@@ -100,4 +124,7 @@ function register_clang_version {
 }
 
 # TODO: Detect version installed and update this
+echo "Registering LLVM tools with update-alternatives"
 register_clang_version 15 100
+
+echo "Done!"
