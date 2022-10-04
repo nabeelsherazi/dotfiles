@@ -3,9 +3,23 @@
 # Bootstrap new Linux install with everything I have to download anyway
 
 # Desired APT installs
-declare -alr packages_to_check=("curl" "gnupg2" "ca-certificates" "lsb-release" \
-    "software-properties-common" "apt-transport-https" "wget" "build-essential" \
-    "ninja-build" "cmake" "python3" "python3-pip" "cppcheck" "git")
+declare -alr packages_to_check=( \
+    "apt-transport-https" \
+    "build-essential" \
+    "ca-certificates" \
+    "cmake" \
+    "cppcheck" \
+    "curl" \
+    "git" \
+    "gnupg2" \
+    "lsb-release" \
+    "ninja-build" \
+    "python3" \
+    "python3-pip" \
+    "software-properties-common" \
+    "wget" \
+    )
+
 # Will be populated with any missing packages from above
 declare -a packages_to_install=()
 
@@ -64,7 +78,7 @@ fi
 
 # --- Install pip packages ---
 
-pip3 install codespell conan black
+pip3 install cmake-init codespell conan black
 
 # --- Install misc tools ---
 
