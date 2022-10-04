@@ -32,7 +32,7 @@ else
     sudo apt install -y "${packages_to_install[@]}"
 fi
 
-# --- Install other packages ---
+# --- Install DEB packages ---
 
 function cleanup {
   echo "Returning to original directory"
@@ -62,7 +62,13 @@ else
     echo "OK: Firefox not installed"
 fi
 
-# Install all LLVM tools
+# --- Install pip packages ---
+
+pip3 install codespell conan black
+
+# --- Install misc tools ---
+
+# LLVM tools
 
 echo "Installing LLVM tools"
 curl -s https://apt.llvm.org/llvm.sh | sudo bash /dev/stdin all
