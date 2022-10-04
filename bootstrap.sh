@@ -82,6 +82,14 @@ pip3 install cmake-init codespell conan black
 
 # --- Install misc tools ---
 
+# Docker
+
+echo "Installing Docker Engine"
+curl -s https://get.docker.com | sudo sh
+sudo groupadd docker
+sudo usermod -aG docker "${USER}"
+newgrp docker
+
 # LLVM tools
 
 echo "Installing LLVM tools"
