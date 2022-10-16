@@ -23,11 +23,17 @@ declare -alr packages_to_check=( \
 # Will be populated with any missing packages from above
 declare -a packages_to_install=()
 
-# --- Check for missing APT packages ---
+# Helper functions
 
 function is_pkg_installed {
     [ "$(dpkg-query -W --showformat='${Status}\n' "$1" | grep "install ok installed")" == "install ok installed" ];
 }
+
+function is_executable_available {
+    [ -x "$(command -v "$1")" ];
+}
+
+# --- Check for missing APT packages ---
 
 for pkg in "${packages_to_check[@]}"; do
     if is_pkg_installed "$pkg"; then
@@ -43,7 +49,8 @@ done
 if [ ${#packages_to_install[@]} -eq 0 ]; then
     echo "NOTE: Nothing to install, yay!"
 else
-    sudo apt install -y "${packages_to_install[@]}"
+    sudo apt update \
+    && sudo apt install -y "${packages_to_install[@]}"
 fi
 
 # --- Install DEB packages ---
@@ -63,8 +70,8 @@ if is_pkg_installed "google-chrome-stable"; then
     echo "OK: Chrome is installed"
 else
     echo "MISSING: Google Chrome, installing now"
-    # curl -fsSL https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    # dpkg -i "./google-chome-stable_current_amd64.deb"
+    curl -LOJR https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && sudo dpkg -i "./google-chome-stable_current_amd64.deb"
 fi
 
 # Uninstall Firefox
@@ -76,6 +83,16 @@ else
     echo "OK: Firefox not installed"
 fi
 
+# Install VS Code
+
+if is_pkg_installed "code"; then
+    echo "OK: VS Code is installed"
+else
+    echo "MISSING: VS Code, installing now"
+    curl -LOJR https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64 \
+    && sudo dpkg -i "$(find . -maxdepth 1 -name 'code*')"
+fi
+
 # --- Install pip packages ---
 
 pip3 install cmake-init codespell conan black
@@ -84,16 +101,17 @@ pip3 install cmake-init codespell conan black
 
 # Docker
 
-echo "Installing Docker Engine"
-curl -s https://get.docker.com | sudo sh
-sudo groupadd docker
-sudo usermod -aG docker "${USER}"
-newgrp docker
+if is_executable_available "docker"; then
+    echo "OK: Docker Engine is installed"
+else
+    echo "MISSING: Docker Engine, installing now"
+    curl -s https://get.docker.com | sudo sh
+    sudo groupadd docker
+    sudo usermod -aG docker "${USER}"
+    newgrp docker
+fi
 
 # LLVM tools
-
-echo "Installing LLVM tools"
-curl -s https://apt.llvm.org/llvm.sh | sudo bash /dev/stdin all
 
 # Register all LLVM tools
 # From: https://gist.github.com/junkdog/70231d6953592cd6f27def59fe19e50d
@@ -151,8 +169,14 @@ function register_clang_version {
         --slave   /usr/bin/clangd                clangd                /usr/bin/clangd-"${version}"
 }
 
-# TODO: Detect version installed and update this
-echo "Registering LLVM tools with update-alternatives"
-register_clang_version 15 100
+if is_executable_available "clang"; then
+    echo "OK: LLVM tools are installed"
+else
+    echo "MISSING: LLVM tools, installing now"
+    curl -s https://apt.llvm.org/llvm.sh | sudo bash /dev/stdin all
+    # TODO: Detect version installed and update this
+    echo "NOTE: Registering LLVM tools with update-alternatives"
+    register_clang_version 15 100
+fi
 
 echo "Done!"
