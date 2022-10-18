@@ -14,6 +14,8 @@ declare -alr packages_to_check=( \
     "gnupg2" \
     "lsb-release" \
     "ninja-build" \
+    "nano" \
+    "python-is-python3" \
     "python3" \
     "python3-pip" \
     "software-properties-common" \
@@ -70,8 +72,8 @@ if is_pkg_installed "google-chrome-stable"; then
     echo "OK: Chrome is installed"
 else
     echo "MISSING: Google Chrome, installing now"
-    curl -LOJR https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && sudo dpkg -i "./google-chome-stable_current_amd64.deb"
+    curl -LOJR "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb" \
+    && sudo dpkg -i "$(find . -maxdepth 1 -name 'google-chrome*')"
 fi
 
 # Uninstall Firefox
@@ -89,13 +91,19 @@ if is_pkg_installed "code"; then
     echo "OK: VS Code is installed"
 else
     echo "MISSING: VS Code, installing now"
-    curl -LOJR https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64 \
+    curl -LOJR "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" \
     && sudo dpkg -i "$(find . -maxdepth 1 -name 'code*')"
 fi
 
 # --- Install pip packages ---
 
 pip3 install cmake-init codespell conan black
+
+# Add to PATH via bashrc
+echo "NOTE: Adding '~/.local/bin' to PATH via bashrc"
+echo >> ~/.bashrc
+echo "# Extend path for Python" >> ~/.bashrc
+echo 'export PATH="${PATH}:$HOME/.local/bin"' >> ~/.bashrc
 
 # --- Install misc tools ---
 
@@ -106,7 +114,7 @@ if is_executable_available "docker"; then
 else
     echo "MISSING: Docker Engine, installing now"
     curl -s https://get.docker.com | sudo sh
-    sudo groupadd docker
+    getent group docker || sudo groupadd docker
     sudo usermod -aG docker "${USER}"
     newgrp docker
 fi
