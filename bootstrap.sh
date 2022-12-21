@@ -193,4 +193,32 @@ else
     register_clang_version 15 100
 fi
 
+# VS Code Extensions
+
+declare -alr extensions_to_install=( \
+    "eamodio.gitlens" \
+    "ms-azuretools.vscode-docker" \
+    "ms-iot.vscode-ros" \
+    "ms-python.isort" \
+    "ms-python.python" \
+    "ms-python.vscode-pylance" \
+    "ms-toolsai.jupyter" \
+    "ms-toolsai.jupyter-keymap" \
+    "ms-toolsai.jupyter-renderers" \
+    "ms-toolsai.vscode-jupyter-cell-tags" \
+    "ms-toolsai.vscode-jupyter-slideshow" \
+    "ms-vscode-remote.remote-containers" \
+    "ms-vscode.cmake-tools" \
+    "ms-vscode.cpptools" \
+    "ms-vscode.cpptools-extension-pack" \
+    "ms-vscode.cpptools-themes" \
+    "platformio.platformio-ide" \
+    "tombonnike.vscode-status-bar-format-toggle" \
+    "twxs.cmake" \
+    )
+
+for ext in "${extensions_to_install[@]}"; do
+    code --install-extension "$pkg"
+done
+
 echo "Done!"
