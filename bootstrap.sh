@@ -37,6 +37,9 @@ function is_executable_available {
 
 # --- Add PPAs for newer versions than available on main repository ---
 
+# AppImageLauncher
+add-apt-repository ppa:appimagelauncher-team/stable
+
 # CMake from Kitware PPA
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
@@ -187,10 +190,10 @@ if is_executable_available "clang"; then
     echo "OK: LLVM tools are installed"
 else
     echo "MISSING: LLVM tools, installing now"
-    curl -s https://apt.llvm.org/llvm.sh | sudo bash /dev/stdin all
+    # curl -s https://apt.llvm.org/llvm.sh | sudo bash /dev/stdin all
     # TODO: Detect version installed and update this
     echo "NOTE: Registering LLVM tools with update-alternatives"
-    register_clang_version 15 100
+    # register_clang_version 15 100
 fi
 
 # VS Code Extensions
@@ -218,7 +221,7 @@ declare -alr extensions_to_install=( \
     )
 
 for ext in "${extensions_to_install[@]}"; do
-    code --install-extension "$pkg"
+    code --install-extension "$ext"
 done
 
 echo "Done!"
