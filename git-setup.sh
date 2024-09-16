@@ -10,6 +10,12 @@ echo "Setting up with name '${NAME}' and email '${EMAIL}'"
 git config --global user.name "${NAME}"
 git config --global user.email "${EMAIL}"
 
+# Convenience
+
+echo "Adding auto URL rewrite to SSH"
+git config --global --replace-all url."git@github.com:".insteadOf https://github.com/
+git config --global --add         url."git@github.com:".insteadOf http://github.com/
+
 # Generate key
 ssh-keygen -t ed25519 -C "${EMAIL}"
 
