@@ -16,6 +16,9 @@ echo "Adding auto URL rewrite to SSH"
 git config --global --replace-all url."git@github.com:".insteadOf https://github.com/
 git config --global --add         url."git@github.com:".insteadOf http://github.com/
 
+echo "Setting default reconciliation strategy to rebase"
+git config --global pull.rebase true
+
 # Generate key
 ssh-keygen -t ed25519 -C "${EMAIL}"
 
