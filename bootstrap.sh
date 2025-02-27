@@ -164,7 +164,7 @@ else
     # Make xdg-terminal-exec (and hence desktop environments that support it use kitty)
     echo 'kitty.desktop' > ~/.config/xdg-terminals.list
     # Update alternatives
-    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.local/kitty.app/bin/kitty 50
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.local/kitty.app/bin/kitty 60
     # Kitty themes
     git clone --depth 1 https://github.com/dexpota/kitty-themes.git ~/.config/kitty/kitty-themes
     ln -s ~/.config/kitty/kitty-themes/themes/ayu_mirage.conf ~/.config/kitty/theme.conf
