@@ -37,9 +37,6 @@ function is_executable_available {
 
 # --- Add PPAs for newer versions than available on main repository ---
 
-# AppImageLauncher
-add-apt-repository ppa:appimagelauncher-team/stable
-
 # CMake from Kitware PPA
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
 echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
@@ -85,6 +82,16 @@ else
     && sudo dpkg -i "$(find . -maxdepth 1 -name 'google-chrome*')"
 fi
 
+# AppImageLauncher
+
+if is_executable_available "appimagelauncherd"; then
+    echo "OK: AppImageLauncher is installed"
+else
+    echo "MISSING: AppImageLauncher, installing now"
+    curl -LOJR "https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_amd64.deb" \
+    && sudo dpkg -i "$(find . -maxdepth 1 -name 'appimagelauncher*')"
+fi
+
 # Uninstall Firefox
 
 if is_pkg_installed "firefox"; then
@@ -103,6 +110,16 @@ else
     curl -LOJR "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64" \
     && sudo dpkg -i "$(find . -maxdepth 1 -name 'code*')"
 fi
+
+# --- Setup global Python venv ---
+echo "NOTE: Creating global venv for Python packages at ~/.local"
+python3 -m venv ~/.local
+echo "NOTE: Adding global venv to bashrc"
+echo >> ~/.bashrc
+echo "# Global venv" >> ~/.bashrc
+echo 'source $HOME/.local/bin/activate' >> ~/.bashrc
+# Activate now
+source ~/.local/bin/activate
 
 # --- Install pip packages ---
 
@@ -127,6 +144,36 @@ else
     sudo usermod -aG docker "${USER}"
     newgrp docker
 fi
+
+# Kitty
+
+if is_executable_available kitty; then
+    echo "OK: Kitty is installed"
+else
+    echo "MISSING: Kitty, installing now"
+    curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+    # Add to ~/.local/bin
+    ln -sf ~/.local/kitty.app/bin/kitty ~/.local/kitty.app/bin/kitten ~/.local/bin/
+    # Place the kitty.desktop file somewhere it can be found by the OS
+    cp ~/.local/kitty.app/share/applications/kitty.desktop ~/.local/share/applications/
+    # If you want to open text files and images in kitty via your file manager also add the kitty-open.desktop file
+    cp ~/.local/kitty.app/share/applications/kitty-open.desktop ~/.local/share/applications/
+    # Update the paths to the kitty and its icon in the kitty desktop file(s)
+    sed -i "s|Icon=kitty|Icon=$(readlink -f ~)/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" ~/.local/share/applications/kitty*.desktop
+    sed -i "s|Exec=kitty|Exec=$(readlink -f ~)/.local/kitty.app/bin/kitty|g" ~/.local/share/applications/kitty*.desktop
+    # Make xdg-terminal-exec (and hence desktop environments that support it use kitty)
+    echo 'kitty.desktop' > ~/.config/xdg-terminals.list
+    # Update alternatives
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator ~/.local/kitty.app/bin/kitty 50
+    # Kitty themes
+    git clone --depth 1 https://github.com/dexpota/kitty-themes.git ~/.config/kitty/kitty-themes
+    ln -s ~/.config/kitty/kitty-themes/themes/ayu_mirage.conf ~/.config/kitty/theme.conf
+    echo "include ./theme.conf" >> ~/.config/kitty/kitty.conf
+fi
+
+# Oh My Bash
+
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
 
 # LLVM tools
 
@@ -195,33 +242,5 @@ else
     echo "NOTE: Registering LLVM tools with update-alternatives"
     # register_clang_version 15 100
 fi
-
-# VS Code Extensions
-
-declare -alr extensions_to_install=( \
-    "eamodio.gitlens" \
-    "ms-azuretools.vscode-docker" \
-    "ms-iot.vscode-ros" \
-    "ms-python.isort" \
-    "ms-python.python" \
-    "ms-python.vscode-pylance" \
-    "ms-toolsai.jupyter" \
-    "ms-toolsai.jupyter-keymap" \
-    "ms-toolsai.jupyter-renderers" \
-    "ms-toolsai.vscode-jupyter-cell-tags" \
-    "ms-toolsai.vscode-jupyter-slideshow" \
-    "ms-vscode-remote.remote-containers" \
-    "ms-vscode.cmake-tools" \
-    "ms-vscode.cpptools" \
-    "ms-vscode.cpptools-extension-pack" \
-    "ms-vscode.cpptools-themes" \
-    "platformio.platformio-ide" \
-    "tombonnike.vscode-status-bar-format-toggle" \
-    "twxs.cmake" \
-    )
-
-for ext in "${extensions_to_install[@]}"; do
-    code --install-extension "$ext"
-done
 
 echo "Done!"
