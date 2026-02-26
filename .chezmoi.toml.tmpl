@@ -1,0 +1,7 @@
+{{- $ros2 := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   $ros2 = promptBool "install ros2?" -}}
+{{- end -}}
+
+[data]
+  ros2 = {{ $ros2 }}
