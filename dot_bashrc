@@ -116,6 +116,19 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Preferred editor for local and remote sessions
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='code --wait'
+else
+  export EDITOR='nano'
+fi
+
+# Global venv
+source $HOME/.local/bin/activate
+
+# Extend path for Python
+export PATH="${PATH}:$HOME/.local/bin"
+
 # Global venv
 source $HOME/.local/bin/activate
 
